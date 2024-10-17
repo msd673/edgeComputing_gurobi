@@ -4,7 +4,7 @@ This project explores offloading SPARQL query processing to edge servers to over
 ## Description
 This project implements an optimization model for query assignment and computational resource allocation in an edge computing system. The system involves multiple terminal devices (EUs) and edge servers (ESs) connected through high-bandwidth networks. The primary goal is to minimize the query response time by optimally assigning queries to edge servers and allocating computational resources based on the available bandwidth and computational capabilities.
 
-The optimization problem is solved using a Branch-and-Bound approach, leveraging the Gurobi solver for efficient Mixed-Integer Linear Programming (MILP) solving.
+The optimization problem is solved using the branch and bound method and the Gurobi solver is used for efficient solving.
 
 ## Features
 - Query Assignment Optimization: Assigns queries to edge servers based on bandwidth and computational resources.
