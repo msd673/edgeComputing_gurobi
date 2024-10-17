@@ -57,10 +57,10 @@ RM = /usr/bin/cmake -E rm -f
 EQUALS = =
 
 # The top-level source directory on which CMake was run.
-CMAKE_SOURCE_DIR = /data12/home/msd/gurobi/gurobi_C++/ec/gurobi_EC
+CMAKE_SOURCE_DIR = ./gurobi_EC
 
 # The top-level build directory on which CMake was run.
-CMAKE_BINARY_DIR = /data12/home/msd/gurobi/gurobi_C++/ec/gurobi_EC
+CMAKE_BINARY_DIR = ./gurobi_EC
 
 #=============================================================================
 # Targets provided globally by CMake.
@@ -87,9 +87,9 @@ rebuild_cache/fast: rebuild_cache
 
 # The main all target
 all: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /data12/home/msd/gurobi/gurobi_C++/ec/gurobi_EC/CMakeFiles /data12/home/msd/gurobi/gurobi_C++/ec/gurobi_EC//CMakeFiles/progress.marks
+	$(CMAKE_COMMAND) -E cmake_progress_start ./gurobi_EC/CMakeFiles ./gurobi_EC//CMakeFiles/progress.marks
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 all
-	$(CMAKE_COMMAND) -E cmake_progress_start /data12/home/msd/gurobi/gurobi_C++/ec/gurobi_EC/CMakeFiles 0
+	$(CMAKE_COMMAND) -E cmake_progress_start ./gurobi_EC/CMakeFiles 0
 .PHONY : all
 
 # The main clean target
