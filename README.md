@@ -30,10 +30,11 @@ The optimization problem is solved using the branch and bound method and the Gur
    cd edgeComputing_gurobi
    
    make
+   
 3. Running the Application
    After building the project, run the compiled binary:
    ```bash
    ./gurobi_EC
 
 # Contact
-For any questions or inquiries, please contact us at msd673@hnu.edu.cn.
+For any questions or inquiries, please contact us at msd673@hnu.edu.cn. 
