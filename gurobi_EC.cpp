@@ -46,9 +46,9 @@ int main(int argc,
      initializeParameters();
 
     // Output the values for verification
-    cout << "Number of MUs (n): " << n << ", Number of ECs (k): " << k << endl;
+    cout << "[parameter] Number of MUs (n): " << n << ", Number of ECs (k): " << k << endl;
     
-    cout << "Matrix e: " << endl;
+    cout << "[parameter] Matrix e: " << endl;
     for (const auto& row : e) {
         for (const auto& val : row) {
             cout << val << " ";
@@ -56,19 +56,19 @@ int main(int argc,
         cout << endl;
     }
     
-    cout << "Vector c: ";
+    cout << "[parameter] Vector c: ";
     for (const auto& val : c) {
         cout << val << " ";
     }
     cout << endl;
     
-    cout << "Vector w: ";
+    cout << "[parameter] Vector w: ";
     for (const auto& val : w) {
         cout << val << " ";
     }
     cout << endl;
     
-    cout << "Vector F: ";
+    cout << "[parameter] Vector F: ";
     for (const auto& val : F) {
         cout << val << " ";
     }
@@ -92,7 +92,7 @@ int main(int argc,
           
      }
 
-     cout << "bestD: " << endl;
+     cout << "[output] bestD: " << endl;
      for (int i = 0; i < n; i++)
      {
           for (int j = 0; j < k; j++)
@@ -103,6 +103,7 @@ int main(int argc,
      }
      vector<vector<double>> f(n, vector<double>(k));
      vector<double> fm(k);
+     cout << "[output] bestFm: " << endl;
      for (int i = 0; i < k; i++)
      {
           for (int j = 0; j < n; j++)
@@ -125,7 +126,7 @@ int main(int argc,
           }
           cout << endl;
      }
-     cout << "bestTarget: " << min_upper << endl;
+     cout << "[output] bestTarget: " << min_upper << endl;
 
      return 0;
 }
