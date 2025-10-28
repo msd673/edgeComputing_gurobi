@@ -4,12 +4,33 @@
 #include <queue>
 using namespace std;
 
+// Branch-and-Bound node
+struct node
+{
+     double upper;
+     double lower;
+     int Nd_num;
+     vector<vector<int>> d;
+     vector<vector<int>> d_upper;
+};
+
+void processNode(queue<node>& Q, node& p, double& min_upper, vector<vector<int>>& best_D);
+double calcProblem(node &p);
+double calcTargetVal(node &p);
+double extract_bandwidth_from_line(const string& line);
+double test_bandwidth(const string& ip_address);
+vector<vector<int>> readMatrixFromFile(const string& filename, int rows, int cols);
+vector<int> readVectorFromFile(const string& filename, int size);
+void initializeParameters();
+
 // EUs ESs
 int n, k; 
 
+// ip address for computing bandwidth
+string cloud_ip;
+vector<string> edge_servers_ip(k);
 // Bandwidth between the terminal and the edge server
 double r_nk_e;
-
 // Bandwidth between the terminal and the cloud
 double r_nk_c;
 
@@ -23,56 +44,16 @@ vector<int> c, w;
 // the computational capability
 vector<int> F;
 
-// Branch-and-Bound node
-struct node
-{
-     double upper;
-     double lower;
-     int Nd_num;
-     std::vector<std::vector<int>> d;
-     std::vector<std::vector<int>> d_upper;
-};
-
-void processNode(queue<node>& Q, node& p, double& min_upper, vector<vector<int>>& best_D);
-double calcProblem(node &p);
-double calcTargetVal(node &p);
-vector<vector<int>> readMatrixFromFile(const string& filename, int rows, int cols);
-vector<int> readVectorFromFile(const string& filename, int size);
-void initializeParameters();
-
 int main(int argc,
          char *argv[])
 {
      initializeParameters();
 
-    // Output the values for verification
-    cout << "[parameter] Number of MUs (n): " << n << ", Number of ECs (k): " << k << endl;
-    
-    cout << "[parameter] Matrix e: " << endl;
-    for (const auto& row : e) {
-        for (const auto& val : row) {
-            cout << val << " ";
-        }
-        cout << endl;
-    }
-    
-    cout << "[parameter] Vector c: ";
-    for (const auto& val : c) {
-        cout << val << " ";
-    }
-    cout << endl;
-    
-    cout << "[parameter] Vector w: ";
-    for (const auto& val : w) {
-        cout << val << " ";
-    }
-    cout << endl;
-    
-    cout << "[parameter] Vector F: ";
-    for (const auto& val : F) {
-        cout << val << " ";
-    }
-    cout << endl;
+     r_nk_c = test_bandwidth(cloud_ip);
+     for(int i=0;i<k;i++) r_nk_e+=test_bandwidth(edge_servers_ip[i]);
+     r_nk_e=r_nk_e/k;
+
+     auto start = chrono::high_resolution_clock::now();
 
      queue<node> Q;
      node p;
@@ -92,7 +73,7 @@ int main(int argc,
           
      }
 
-     cout << "[output] bestD: " << endl;
+     cout << "bestD: " << endl;
      for (int i = 0; i < n; i++)
      {
           for (int j = 0; j < k; j++)
@@ -103,7 +84,6 @@ int main(int argc,
      }
      vector<vector<double>> f(n, vector<double>(k));
      vector<double> fm(k);
-     cout << "[output] bestFm: " << endl;
      for (int i = 0; i < k; i++)
      {
           for (int j = 0; j < n; j++)
@@ -126,8 +106,13 @@ int main(int argc,
           }
           cout << endl;
      }
-     cout << "[output] bestTarget: " << min_upper << endl;
+     cout << "bestTarget: " << min_upper << endl;
 
+     auto end = chrono::high_resolution_clock::now();
+     auto duration = chrono::duration_cast<chrono::microseconds>(end - start)/1000;
+
+     cout << "Execution time: " << duration.count() << " ms" << endl;
+     
      return 0;
 }
 
@@ -181,7 +166,7 @@ void processNode(queue<node>& Q, node& p, double& min_upper, vector<vector<int>>
 
 double calcTargetVal(node &p)
 {
-     std::vector<std::vector<int>> D_upper = p.d_upper;
+     vector<vector<int>> D_upper = p.d_upper;
      double obj = 0.0;
      for (int i = 0; i < k; i++)
      {
@@ -216,7 +201,7 @@ double calcTargetVal(node &p)
 double calcProblem(node &p)
 {
      int Nd_num = p.Nd_num;
-     std::vector<std::vector<int>> d = p.d;
+     vector<vector<int>> d = p.d;
      GRBEnv *env = 0;
 
      // Create an environment
@@ -323,11 +308,11 @@ double calcProblem(node &p)
 
           // Optimize model
           model.optimize();
-          std::vector<std::vector<int>> D_upper = p.d;
+          vector<vector<int>> D_upper = p.d;
 
           for (int i = 0; i < n - Nd_num; i++)
           {
-               std::vector<int> tmp;
+               vector<int> tmp;
                for (int j = 0; j < k; j++)
                {
                     cout << D[i][j].get(GRB_StringAttr_VarName) << " "
@@ -386,6 +371,63 @@ vector<vector<int>> readMatrixFromFile(const string& filename, int rows, int col
     return matrix;
 }
 
+double extract_bandwidth_from_line(const string& line) {
+    regex bandwidth_regex(R"(\s+(\d+(?:\.\d+)?)\s+(G|M|K)?bits/sec\s+)");
+    smatch match;
+
+    if (regex_search(line, match, bandwidth_regex)) {
+        double value = stod(match[1]);
+        string unit = match[2];
+        
+        if (unit == "G") return value * 1000; // Convert Gbits/sec to Mbits/sec
+        if (unit == "M") return value;         // Already in Mbits/sec
+        if (unit == "K") return value / 1000;  // Convert Kbits/sec to Mbits/sec
+    }
+    return -1;
+}
+
+double test_bandwidth(const string& ip_address) {
+    string cmd = "iperf -c " + ip_address;
+    
+    FILE* pipe = popen(cmd.c_str(), "r");
+    if (!pipe) {
+        cerr << "Failed to execute iperf command. Please check if iperf is installed." << endl;
+        return -1.0;
+    }
+
+    array<char, 1024> buffer;
+    string output;
+    double bandwidth = -1;
+    string sum_line;  
+
+    while (fgets(buffer.data(), buffer.size(), pipe) != nullptr) {
+        string line(buffer.data());
+        output += line;
+
+        if (line.find("[SUM]") != string::npos) {
+            sum_line = line;
+        }
+
+        else if (bandwidth < 0) {
+            bandwidth = extract_bandwidth_from_line(line);
+        }
+    }
+
+    pclose(pipe);
+
+    if (!sum_line.empty()) {
+        bandwidth = extract_bandwidth_from_line(sum_line);
+    }
+
+    if (bandwidth > 0) {
+        return bandwidth;
+    } else {    
+        cerr << "Failed to obtain bandwidth data. Full iperf output:" << endl;
+        cerr << output << endl;
+        return -1.0;
+    }
+}
+
 vector<int> readVectorFromFile(const string& filename, int size) {
     vector<int> vec(size);
     ifstream file(filename);
@@ -409,10 +451,10 @@ void initializeParameters() {
     cin >> k;
 
     // Get user input for 'r_nk_e' and 'r_nk_c'
-    cout << "Enter bandwidth between the terminal and the edge server: ";
-    cin >> r_nk_e;
-    cout << "Enter Bandwidth between the terminal and the cloud: ";
-    cin >> r_nk_c;
+    cout << "Enter cloud server ip: ";
+    cin >> cloud_ip;
+    cout << "Enter edge servers ip: ";
+    for(int i=0;i<k;i++) cin >> edge_servers_ip[i];
     
     string matrixFile;  // File containing matrix 'e'
     cout << "Enter the filename of query executability vector: ";
